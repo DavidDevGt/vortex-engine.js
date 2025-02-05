@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>VortexJS - Counter Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f4f4f4;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        button {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div vx-zone>
+        <h1>Counter: <span vx-bind="counter"></span></h1>
+        <button vx-on="click: counter = counter + 1">Increment</button>
+    </div>
+
+    <script src="vortex.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            Vortex.createEngine({ counter: 0 }).mount();
+        });
+    </script>
+</body>
+
+</html>
