@@ -2,19 +2,9 @@
 
 ¡Bienvenido a VortexJS! Este framework reactivo ligero e intuitivo hace que construir aplicaciones web dinámicas sea más sencillo que nunca. Ya seas nuevo en el desarrollo frontend o estés buscando una alternativa más simple a frameworks más grandes, VortexJS te proporciona las herramientas esenciales que necesitas.
 
-## Tabla de Contenidos
-
-1. Introducción
-2. Primeros Pasos
-3. Conceptos Fundamentales
-4. Directivas
-5. Gestión del Estado
-6. Ejemplos
-7. Buenas Prácticas
-
 ## 1. Introducción
 
-VortexJS es un framework JavaScript reactivo que te ayuda a crear aplicaciones web dinámicas con un mínimo de código inicial. Utiliza un sistema basado en directivas simple que te resultará familiar si has trabajado con frameworks como Vue.js, pero con una curva de aprendizaje más suave.
+VortexJS es un framework JavaScript reactivo que te ayuda a crear aplicaciones web dinámicas con un mínimo de código inicial. Utiliza un sistema basado en directivas simples con una curva de aprendizaje más suave que cualquier otro framework.
 
 ### Características Principales
 
@@ -261,8 +251,3 @@ Aquí tienes un ejemplo de un formulario reactivo:
 
 5. **Manejo de Errores**: VortexJS incluye límites de error incorporados. Monitorea tu consola para ver mensajes de error útiles durante el desarrollo.
 
----
-
-Recuerda, VortexJS está diseñado para ser accesible y directo. Comienza con ejemplos simples y gradualmente construye aplicaciones más complejas a medida que te sientas cómodo con los conceptos básicos.
-
-¡Feliz desarrollo con VortexJS! 🌪️

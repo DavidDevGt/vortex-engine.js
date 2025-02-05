@@ -199,7 +199,7 @@
                     render: (state) => {
                         const list = state[listName];
                         if (!Array.isArray(list)) return;
-                        const currentElements = new Set();
+                        let currentElements = new Set();
                         const fragment = document.createDocumentFragment();
                         list.forEach((item, index) => {
                             let element = Array.from(previousElements)[index];
@@ -269,9 +269,15 @@
         }
 
         processZone(zone) {
+            // Para cada directiva, recorremos los elementos con ese atributo
             Object.keys(DIRECTIVES).forEach(key => {
                 const attr = DIRECTIVES[key];
+                // Evitamos procesar elementos que sean descendientes de un vx-for,
+                // excepto el propio elemento que define el vx-for.
                 zone.querySelectorAll(`[${attr}]`).forEach(el => {
+                    if (el !== zone && el.closest('[vx-for]') && !el.hasAttribute('vx-for')) {
+                        return;
+                    }
                     const expression = el.getAttribute(attr);
                     const handler = this.directives.get(key);
                     if (handler) {
@@ -293,7 +299,7 @@
             const bindElements = element.querySelectorAll("[vx-bind]");
             bindElements.forEach(el => {
                 const expr = el.getAttribute("vx-bind");
-                const evaluate = this.compileExpression(expr, `{${itemName}, ...state}`);
+                const evaluate = this.compileExpression(expr, "state");
                 const combinedState = Object.assign({}, state, { [itemName]: item });
                 el.textContent = evaluate(combinedState);
             });
@@ -303,7 +309,7 @@
             const bindElements = element.querySelectorAll("[vx-bind]");
             bindElements.forEach(el => {
                 const expr = el.getAttribute("vx-bind");
-                const evaluate = this.compileExpression(expr, `{${itemName}, ...state}`);
+                const evaluate = this.compileExpression(expr, "state");
                 const combinedState = Object.assign({}, state, { [itemName]: item });
                 const newValue = evaluate(combinedState);
                 if (el.textContent !== newValue.toString()) {
