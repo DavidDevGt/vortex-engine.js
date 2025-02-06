@@ -196,7 +196,7 @@
                     itemName,
                     parent,
                     template,
-                    render: (state) => {
+                    update: (state) => {
                         const list = state[listName];
                         if (!Array.isArray(list)) return;
                         let currentElements = new Set();
@@ -219,6 +219,7 @@
                         previousElements = currentElements;
                     }
                 });
+
             });
 
             // vx-model: Enlace bidireccional para inputs.
