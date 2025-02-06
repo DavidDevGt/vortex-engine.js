@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Prueba Completa de VortexJS</title>
+    <title>Prueba Avanzada de VortexJS</title>
     <style>
         /* Material Design styles */
         :root {
@@ -87,6 +87,7 @@
             box-shadow: var(--elevation-1);
             transition: background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+            margin-right: 8px;
         }
 
         button:hover {
@@ -161,11 +162,43 @@
                 margin-bottom: 8px;
             }
         }
+
+        /* Animaciones para contenido condicional (vx-if) */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+
+        .conditional-enter {
+            animation: fadeInUp 300ms ease-out forwards;
+        }
+
+        .conditional-exit {
+            animation: fadeOutDown 300ms ease-out forwards;
+        }
     </style>
 </head>
 
 <body>
-
     <div vx-zone>
 
         <section>
@@ -186,7 +219,7 @@
 
         <section>
             <h2>Prueba vx-if</h2>
-            <div vx-if="showConditional">
+            <div vx-if="showConditional" class="conditional-enter">
                 <p>Este contenido se muestra solo cuando <code>showConditional</code> es verdadero.</p>
             </div>
             <button vx-on="click: toggleConditional()">
@@ -199,8 +232,7 @@
             <ul>
                 <!-- La expresión debe cumplir el formato "variable in array" -->
                 <li vx-for="item in items">
-                    <span vx-bind="item.name"></span> -
-                    <span vx-bind="item.value"></span>
+                    <span vx-bind="item.name"></span> - <span vx-bind="item.value"></span>
                 </li>
             </ul>
             <button vx-on="click: addItem()">
@@ -226,12 +258,42 @@
         </section>
 
         <section>
-            <h2>Prueba vx-for con expresión incorrecta (debe loguear error en la consola)</h2>
+            <h2>Prueba vx-for con expresión incorrecta</h2>
             <ul>
                 <li vx-for="malFormato">
                     Este elemento no debería renderizarse correctamente.
                 </li>
             </ul>
+        </section>
+
+        <section>
+            <h2>Prueba Avanzada vx-if (condiciones anidadas y animación de salida)</h2>
+            <div vx-if="showAdvanced">
+                <p>Contenido avanzado visible.</p>
+                <div vx-if="inputText.length > 5" class="conditional-enter">
+                    <p>¡Has escrito más de 5 caracteres!</p>
+                </div>
+            </div>
+            <button vx-on="click: toggleAdvanced()">
+                Alternar Contenido Avanzado
+            </button>
+        </section>
+
+        <section>
+            <h2>Prueba Combinada: vx-if, vx-bind, vx-model y vx-on</h2>
+            <p>
+                <strong>Actualiza tu nombre</strong>:
+            </p>
+            <input type="text" placeholder="Ingresa tu nombre" vx-model="userName">
+            <div vx-if="userName !== ''" class="conditional-enter">
+                <p vx-bind="'¡Hola, ' + userName + '! Bienvenido a VortexJS.'"></p>
+                <button vx-on="click: greetUser()" vx-bind:disabled="userName.length < 3">
+                    Saludar
+                </button>
+            </div>
+            <div vx-if="userName !== '' && userName.length < 3" class="error conditional-enter">
+                Tu nombre debe tener al menos 3 caracteres.
+            </div>
         </section>
 
     </div>
@@ -250,32 +312,35 @@
                 ],
                 inputText: '',
                 lastEvent: '',
+                showAdvanced: false,
+                userName: '',
                 toggleShow() {
                     this.showParagraph = !this.showParagraph;
                 },
-
                 toggleConditional() {
                     this.showConditional = !this.showConditional;
                 },
-
                 addItem() {
                     const newIndex = this.items.length + 1;
                     this.items.push({ name: 'Ítem ' + newIndex, value: 'Valor ' + newIndex });
-                    // Se debe hacer una copia del array para que VortexJS detecte el cambio
+                    // Se hace copia para actualizar la reactividad
                     this.items = this.items.slice();
                 },
-
                 removeItem() {
                     this.items.pop();
                     this.items = this.items.slice();
                 },
-
                 handleClick() {
                     this.lastEvent = 'click';
                 },
-
                 handleMouseOver() {
                     this.lastEvent = 'mouseover';
+                },
+                toggleAdvanced() {
+                    this.showAdvanced = !this.showAdvanced;
+                },
+                greetUser() {
+                    alert('¡Hola ' + this.userName + '! Gracias por usar VortexJS.');
                 }
             }).mount();
         });
