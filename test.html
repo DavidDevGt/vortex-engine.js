@@ -6,40 +6,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Prueba Completa de VortexJS</title>
     <style>
+        /* Material Design styles */
+        :root {
+            --primary: #6200ee;
+            --primary-variant: #3700b3;
+            --secondary: #03dac6;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --error: #b00020;
+            --on-primary: #ffffff;
+            --on-secondary: #000000;
+            --on-background: #000000;
+            --on-surface: #000000;
+            --on-error: #ffffff;
+            --elevation-1: 0 2px 1px -1px rgba(0, 0, 0, 0.2),
+                0 1px 1px 0 rgba(0, 0, 0, 0.14),
+                0 1px 3px 0 rgba(0, 0, 0, 0.12);
+            --elevation-2: 0 3px 1px -2px rgba(0, 0, 0, 0.2),
+                0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                0 1px 5px 0 rgba(0, 0, 0, 0.12);
+        }
+
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: Roboto, Arial, sans-serif;
+            margin: 24px;
+            background-color: var(--background);
+            color: var(--on-background);
+            line-height: 1.5;
+            letter-spacing: 0.15px;
         }
 
+        /* Section cards */
         section {
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
-            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background-color: var(--surface);
+            box-shadow: var(--elevation-1);
+            transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        section:hover {
+            box-shadow: var(--elevation-2);
+        }
+
+        /* Typography */
         h2 {
-            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--primary);
+            letter-spacing: 0.15px;
         }
 
+        p {
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: rgba(0, 0, 0, 0.87);
+        }
+
+        /* Buttons */
+        button {
+            background-color: var(--primary);
+            color: var(--on-primary);
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.25px;
+            cursor: pointer;
+            box-shadow: var(--elevation-1);
+            transition: background-color 280ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button:hover {
+            background-color: var(--primary-variant);
+            box-shadow: var(--elevation-2);
+        }
+
+        button:active {
+            box-shadow: var(--elevation-1);
+        }
+
+        /* Form elements */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid rgba(0, 0, 0, 0.23);
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 280ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Lists */
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        /* Error state */
         .error {
-            color: red;
+            color: var(--error);
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: rgba(176, 0, 32, 0.08);
+        }
+
+        /* Spacing utilities */
+        .mt-2 {
+            margin-top: 8px;
+        }
+
+        .mb-2 {
+            margin-bottom: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            body {
+                margin: 16px;
+            }
+
+            section {
+                padding: 12px;
+            }
+
+            button {
+                width: 100%;
+                margin-bottom: 8px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Zona Reactiva que contendrá las pruebas de todas las directivas -->
     <div vx-zone>
 
-        <!-- Test vx-bind: Enlaza expresiones al contenido textual -->
         <section>
             <h2>Prueba vx-bind</h2>
             <p vx-bind="message"></p>
             <p vx-bind="'Valor calculado (contador * 2): ' + (counter * 2)"></p>
         </section>
 
-        <!-- Test vx-show: Muestra u oculta elementos según una condición -->
         <section>
             <h2>Prueba vx-show</h2>
             <p vx-show="showParagraph">
@@ -50,7 +184,6 @@
             </button>
         </section>
 
-        <!-- Test vx-if: Inserta o remueve el elemento del DOM basado en una condición -->
         <section>
             <h2>Prueba vx-if</h2>
             <div vx-if="showConditional">
@@ -61,11 +194,10 @@
             </button>
         </section>
 
-        <!-- Test vx-for: Genera elementos dinámicamente iterando sobre un array -->
         <section>
             <h2>Prueba vx-for</h2>
             <ul>
-                <!-- La expresión debe cumplir el formato "variable in array" (la regex se encarga de validarlo) -->
+                <!-- La expresión debe cumplir el formato "variable in array" -->
                 <li vx-for="item in items">
                     <span vx-bind="item.name"></span> -
                     <span vx-bind="item.value"></span>
@@ -79,14 +211,12 @@
             </button>
         </section>
 
-        <!-- Test vx-model: Enlace bidireccional en inputs -->
         <section>
             <h2>Prueba vx-model</h2>
             <input type="text" placeholder="Escribe algo..." vx-model="inputText">
             <p>Valor del input: <span vx-bind="inputText"></span></p>
         </section>
 
-        <!-- Test vx-on con múltiples eventos -->
         <section>
             <h2>Prueba vx-on con múltiples eventos</h2>
             <button vx-on="click: handleClick(); mouseover: handleMouseOver()">
@@ -95,7 +225,6 @@
             <p vx-bind="'Último evento: ' + lastEvent"></p>
         </section>
 
-        <!-- Test de error en vx-for: Declaración incorrecta para probar el manejo de errores y la validación de la regex -->
         <section>
             <h2>Prueba vx-for con expresión incorrecta (debe loguear error en la consola)</h2>
             <ul>
@@ -107,62 +236,44 @@
 
     </div>
 
-    <!-- Se incluye el script de VortexJS -->
     <script src="vortex.js"></script>
     <script>
-        // Inicializa el engine cuando el DOM esté completamente cargado
         document.addEventListener('DOMContentLoaded', () => {
             Vortex.createEngine({
-                // Variables y propiedades iniciales para probar vx-bind y vx-show
                 message: '¡Hola VortexJS!',
                 counter: 1,
                 showParagraph: true,
                 showConditional: false,
-
-                // Array para vx-for
                 items: [
                     { name: 'Ítem 1', value: 'Valor 1' },
                     { name: 'Ítem 2', value: 'Valor 2' }
                 ],
-
-                // Variable para vx-model
                 inputText: '',
-
-                // Variable para probar múltiples eventos en vx-on
                 lastEvent: '',
-
-                // Funciones para cambiar el estado y activar las actualizaciones
-
-                // Alterna la visibilidad de un párrafo (vx-show)
                 toggleShow() {
                     this.showParagraph = !this.showParagraph;
                 },
 
-                // Alterna la condición para mostrar contenido (vx-if)
                 toggleConditional() {
                     this.showConditional = !this.showConditional;
                 },
 
-                // Agrega un nuevo ítem al array (vx-for)
                 addItem() {
                     const newIndex = this.items.length + 1;
                     this.items.push({ name: 'Ítem ' + newIndex, value: 'Valor ' + newIndex });
-                    // Para asegurar la reactividad en arrays, se reasigna el array
+                    // Se debe hacer una copia del array para que VortexJS detecte el cambio
                     this.items = this.items.slice();
                 },
 
-                // Quita el último ítem del array (vx-for)
                 removeItem() {
                     this.items.pop();
                     this.items = this.items.slice();
                 },
 
-                // Manejador para click (vx-on)
                 handleClick() {
                     this.lastEvent = 'click';
                 },
 
-                // Manejador para mouseover (vx-on)
                 handleMouseOver() {
                     this.lastEvent = 'mouseover';
                 }
