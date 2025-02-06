@@ -16,6 +16,10 @@
 
         return new Proxy(target, {
             get(target, property) {
+                if (typeof property === 'symbol') {
+                    return target[property];
+                }
+
                 const value = target[property];
                 const newPath = path ? `${path}.${property}` : property;
 
@@ -40,36 +44,110 @@
     }
 
     /**
-     * Clase VNode: nodo virtual que representa un element.
+     * Clase VNode: Representa un nodo virtual para diffing del DOM.
      */
     class VNode {
         constructor(element) {
-            this.tagName = element.tagName?.toLowerCase();
+            this.tagName = element.tagName?.toLowerCase() || null;
             this.attributes = new Map(
-                Array.from(element.attributes || [])
-                    .map(attr => [attr.name, attr.value])
+                Array.from(element.attributes || []).map(attr => [attr.name, attr.value])
             );
-            this.children = Array.from(element.childNodes)
-                .map(child => child.nodeType === Node.TEXT_NODE ?
-                    child.textContent :
-                    new VNode(child)
-                );
+            this.children = Array.from(element.childNodes).map(child =>
+                child.nodeType === Node.TEXT_NODE ? child.textContent : new VNode(child)
+            );
             this.key = element.getAttribute('key');
-            this._cachedHash = this.computeHash();
         }
 
-        computeHash() {
-            return `${this.tagName}:${Array.from(this.attributes.entries()).join(',')}`;
-        }
-
+        /**
+         * Compara este nodo con otro VNode para detectar diferencias.
+         * @param {VNode} oldNode - Nodo virtual anterior.
+         * @returns {Object} Resultado del diffing con instrucciones de cambio.
+         */
         diff(oldNode) {
-            if (!oldNode) return 'CREATE';
-            if (!this.tagName) return 'UPDATE';
-            if (this.tagName !== oldNode.tagName) return 'REPLACE';
-            if (this._cachedHash !== oldNode._cachedHash) return 'UPDATE';
-            return 'NONE';
+            if (!oldNode) return { type: 'CREATE', node: this };
+            if (!this.tagName) return { type: 'UPDATE_TEXT', text: this.children[0] };
+            if (this.tagName !== oldNode.tagName) return { type: 'REPLACE', node: this };
+
+            // Comparar atributos
+            const attributeDiffs = this.diffAttributes(oldNode.attributes);
+
+            // Comparar hijos
+            const childrenDiffs = this.diffChildren(oldNode.children);
+
+            // Si hay diferencias, devolver los cambios
+            if (attributeDiffs.length > 0 || childrenDiffs.length > 0) {
+                return {
+                    type: 'UPDATE',
+                    attributes: attributeDiffs,
+                    children: childrenDiffs
+                };
+            }
+
+            return { type: 'NONE' };
         }
+
+        /**
+         * Compara los atributos de este nodo con otro y devuelve los cambios.
+         * @param {Map} oldAttributes - Atributos del nodo anterior.
+         * @returns {Array} Cambios detectados en los atributos.
+         */
+        diffAttributes(oldAttributes) {
+            const changes = [];
+
+            // Verificar atributos nuevos o modificados
+            for (const [key, value] of this.attributes.entries()) {
+                if (!oldAttributes.has(key) || oldAttributes.get(key) !== value) {
+                    changes.push({ type: 'SET_ATTR', key, value });
+                }
+            }
+
+            // Verificar atributos eliminados
+            for (const key of oldAttributes.keys()) {
+                if (!this.attributes.has(key)) {
+                    changes.push({ type: 'REMOVE_ATTR', key });
+                }
+            }
+
+            return changes;
+        }
+
+        /**
+         * Compara los hijos del nodo con los del nodo anterior.
+         * @param {Array} oldChildren - Lista de hijos del nodo anterior.
+         * @returns {Array} Diferencias en los hijos.
+         */
+        diffChildren(oldChildren) {
+            const diffs = [];
+            const oldMap = new Map();
+
+            oldChildren.forEach((child, index) => {
+                if (child.key) oldMap.set(child.key, { node: child, index });
+            });
+
+            this.children.forEach((newChild, index) => {
+                const key = newChild.key ?? index;
+                const old = oldMap.get(key);
+
+                if (!old) {
+                    diffs.push({ type: 'ADD_CHILD', index, node: newChild });
+                } else {
+                    oldMap.delete(key);
+                    const childDiff = newChild.diff(old.node);
+                    if (childDiff.type !== 'NONE') {
+                        diffs.push({ type: 'UPDATE_CHILD', index, changes: childDiff });
+                    }
+                }
+            });
+
+            oldMap.forEach(({ index }) => {
+                diffs.push({ type: 'REMOVE_CHILD', index });
+            });
+
+            return diffs;
+        }
+
     }
+
 
     /**
      * Clase ErrorBoundary para gestionar errores en las directivas.
@@ -189,7 +267,7 @@
                 const parent = el.parentNode;
                 parent.removeChild(el);
 
-                let previousElements = new Set();
+                let previousElements = new Map();
                 this.engine.bindings.push({
                     type: 'for',
                     listName,
@@ -199,49 +277,61 @@
                     update: (state) => {
                         const list = state[listName];
                         if (!Array.isArray(list)) return;
-                        let currentElements = new Set();
+
+                        let newElements = new Map();
                         const fragment = document.createDocumentFragment();
+
                         list.forEach((item, index) => {
-                            let element = Array.from(previousElements)[index];
+                            const key = item.key ?? index; // Usa 'key' si está presente
+                            let element = previousElements.get(key);
+
                             if (!element) {
                                 element = template.cloneNode(true);
                                 this.processElement(element, item, state, itemName);
                             } else {
-                                previousElements.delete(element);
                                 this.updateElement(element, item, state, itemName);
                             }
-                            currentElements.add(element);
+
+                            newElements.set(key, element);
                             fragment.appendChild(element);
                         });
-                        previousElements.forEach(el => el.remove());
-                        parent.innerHTML = '';
+
+                        // Remover elementos obsoletos
+                        previousElements.forEach((el, key) => {
+                            if (!newElements.has(key)) el.remove();
+                        });
+
                         parent.appendChild(fragment);
-                        previousElements = currentElements;
+                        previousElements = newElements;
                     }
                 });
-
             });
 
             // vx-model: Enlace bidireccional para inputs.
             this.register('model', (el, expression) => {
                 const modelName = expression.trim();
                 const evaluate = this.compileExpression(modelName);
+
+                const updateInput = (state) => {
+                    const newValue = evaluate(state);
+                    if (el.value !== newValue) {
+                        el.value = newValue;
+                    }
+                };
+
                 this.engine.bindings.push({
                     type: 'model',
                     el,
                     modelName,
                     evaluate,
-                    update: (state) => {
-                        const newValue = evaluate(state);
-                        if (el.value !== newValue) {
-                            el.value = newValue;
-                        }
-                    }
+                    update: updateInput
                 });
-                el.addEventListener("input", e => {
+
+                el.addEventListener("input", (e) => {
                     this.engine.setState({ [modelName]: e.target.value });
                 });
             });
+
 
             // vx-on: Asocia manejadores de eventos al elemento.
             this.register('on', (el, expression) => {
@@ -263,6 +353,7 @@
                     }
                 });
             });
+
         }
 
         register(name, handler) {
