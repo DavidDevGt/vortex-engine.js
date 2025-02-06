@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prueba Completa de VortexJS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        section {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Zona Reactiva que contendrá las pruebas de todas las directivas -->
+    <div vx-zone>
+
+        <!-- Test vx-bind: Enlaza expresiones al contenido textual -->
+        <section>
+            <h2>Prueba vx-bind</h2>
+            <p vx-bind="message"></p>
+            <p vx-bind="'Valor calculado (contador * 2): ' + (counter * 2)"></p>
+        </section>
+
+        <!-- Test vx-show: Muestra u oculta elementos según una condición -->
+        <section>
+            <h2>Prueba vx-show</h2>
+            <p vx-show="showParagraph">
+                Este párrafo es visible según el valor de <code>showParagraph</code>.
+            </p>
+            <button vx-on="click: toggleShow()">
+                Alternar Visibilidad
+            </button>
+        </section>
+
+        <!-- Test vx-if: Inserta o remueve el elemento del DOM basado en una condición -->
+        <section>
+            <h2>Prueba vx-if</h2>
+            <div vx-if="showConditional">
+                <p>Este contenido se muestra solo cuando <code>showConditional</code> es verdadero.</p>
+            </div>
+            <button vx-on="click: toggleConditional()">
+                Alternar Contenido Condicional
+            </button>
+        </section>
+
+        <!-- Test vx-for: Genera elementos dinámicamente iterando sobre un array -->
+        <section>
+            <h2>Prueba vx-for</h2>
+            <ul>
+                <!-- La expresión debe cumplir el formato "variable in array" (la regex se encarga de validarlo) -->
+                <li vx-for="item in items">
+                    <span vx-bind="item.name"></span> -
+                    <span vx-bind="item.value"></span>
+                </li>
+            </ul>
+            <button vx-on="click: addItem()">
+                Agregar Ítem
+            </button>
+            <button vx-on="click: removeItem()">
+                Quitar Último Ítem
+            </button>
+        </section>
+
+        <!-- Test vx-model: Enlace bidireccional en inputs -->
+        <section>
+            <h2>Prueba vx-model</h2>
+            <input type="text" placeholder="Escribe algo..." vx-model="inputText">
+            <p>Valor del input: <span vx-bind="inputText"></span></p>
+        </section>
+
+        <!-- Test vx-on con múltiples eventos -->
+        <section>
+            <h2>Prueba vx-on con múltiples eventos</h2>
+            <button vx-on="click: handleClick(); mouseover: handleMouseOver()">
+                Haz clic o pasa el ratón sobre mí
+            </button>
+            <p vx-bind="'Último evento: ' + lastEvent"></p>
+        </section>
+
+        <!-- Test de error en vx-for: Declaración incorrecta para probar el manejo de errores y la validación de la regex -->
+        <section>
+            <h2>Prueba vx-for con expresión incorrecta (debe loguear error en la consola)</h2>
+            <ul>
+                <li vx-for="malFormato">
+                    Este elemento no debería renderizarse correctamente.
+                </li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- Se incluye el script de VortexJS -->
+    <script src="vortex.js"></script>
+    <script>
+        // Inicializa el engine cuando el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', () => {
+            Vortex.createEngine({
+                // Variables y propiedades iniciales para probar vx-bind y vx-show
+                message: '¡Hola VortexJS!',
+                counter: 1,
+                showParagraph: true,
+                showConditional: false,
+
+                // Array para vx-for
+                items: [
+                    { name: 'Ítem 1', value: 'Valor 1' },
+                    { name: 'Ítem 2', value: 'Valor 2' }
+                ],
+
+                // Variable para vx-model
+                inputText: '',
+
+                // Variable para probar múltiples eventos en vx-on
+                lastEvent: '',
+
+                // Funciones para cambiar el estado y activar las actualizaciones
+
+                // Alterna la visibilidad de un párrafo (vx-show)
+                toggleShow() {
+                    this.showParagraph = !this.showParagraph;
+                },
+
+                // Alterna la condición para mostrar contenido (vx-if)
+                toggleConditional() {
+                    this.showConditional = !this.showConditional;
+                },
+
+                // Agrega un nuevo ítem al array (vx-for)
+                addItem() {
+                    const newIndex = this.items.length + 1;
+                    this.items.push({ name: 'Ítem ' + newIndex, value: 'Valor ' + newIndex });
+                    // Para asegurar la reactividad en arrays, se reasigna el array
+                    this.items = this.items.slice();
+                },
+
+                // Quita el último ítem del array (vx-for)
+                removeItem() {
+                    this.items.pop();
+                    this.items = this.items.slice();
+                },
+
+                // Manejador para click (vx-on)
+                handleClick() {
+                    this.lastEvent = 'click';
+                },
+
+                // Manejador para mouseover (vx-on)
+                handleMouseOver() {
+                    this.lastEvent = 'mouseover';
+                }
+            }).mount();
+        });
+    </script>
+</body>
+
+</html>

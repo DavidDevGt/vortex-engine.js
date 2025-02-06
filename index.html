@@ -271,15 +271,16 @@
                 <pre class="code-block" vx-bind="sections.instalacion.code"></pre>
                 <p class="section__text">Y configura tu aplicación de la siguiente manera:</p>
                 <pre class="code-block">
-&lt;div vx-zone&gt;
-    &lt;h1 vx-bind="mensaje"&gt;&lt;/h1&gt;
-&lt;/div&gt;
+                    &lt;div vx-zone&gt;
+                        &lt;h1 vx-bind="mensaje"&gt;&lt;/h1&gt;
+                    &lt;/div&gt;
 
-&lt;script&gt;
-    document.addEventListener("DOMContentLoaded", function() {
-        Vortex.createEngine({ mensaje: "¡Hola, VortexJS!" }).mount();
-    });
-&lt;/script&gt;</pre>
+                    &lt;script&gt;
+                        document.addEventListener("DOMContentLoaded", function() {
+                            Vortex.createEngine({ mensaje: "¡Hola, VortexJS!" }).mount();
+                        });
+                    &lt;/script&gt;
+                </pre>
             </div>
         </section>
 
