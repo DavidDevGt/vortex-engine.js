@@ -1,0 +1,22 @@
+# Development files
+test/
+build/
+docs/examples/
+docs/assets/
+
+# Documentation (keep main docs)
+docs/index.html
+
+# Development configs
+.vscode/
+.idea/
+*.log
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db

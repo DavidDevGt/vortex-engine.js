@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VortexEngine - Todo App Example</title>
+    <script src="../../dist/vortex-engine.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #f8fafc;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .todo-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        .todo-text {
+            flex: 1;
+            font-size: 1rem;
+        }
+        .delete-btn {
+            background: #ef4444;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+        .stats {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div vx-zone class="container">
+        <h1>⚡ VortexEngine Todo App</h1>
+        <p>A fully functional todo application built with VortexEngine.</p>
+        
+        <div class="input-group">
+            <input 
+                type="text" 
+                vx-model="newTodo" 
+                placeholder="What needs to be done?"
+                vx-on="keydown: handleKeydown(event)"
+            >
+            <button vx-on="click: addTodo()" vx-show="newTodo.trim()">
+                Add Todo
+            </button>
+        </div>
+        
+        <div vx-show="todos.length === 0" class="empty-state">
+            <p>🎉 No todos yet! Add one above to get started.</p>
+        </div>
+        
+        <div vx-show="todos.length > 0">
+            <div vx-for="todo in todos" class="todo-item" vx-bind:class="todo.completed ? 'completed' : ''">
+                <input 
+                    type="checkbox" 
+                    vx-on="change: toggleTodo(todo.id)"
+                    vx-bind:checked="todo.completed"
+                >
+                <span class="todo-text" vx-bind="todo.text"></span>
+                <button class="delete-btn" vx-on="click: deleteTodo(todo.id)">
+                    Delete
+                </button>
+            </div>
+            
+            <div class="stats">
+                <p>
+                    Total: <strong vx-bind="todos.length">0</strong> |
+                    Completed: <strong vx-bind="completedCount">0</strong> |
+                    Remaining: <strong vx-bind="remainingCount">0</strong>
+                </p>
+                <button vx-on="click: clearCompleted()" vx-show="completedCount > 0">
+                    Clear Completed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create VortexEngine application
+        const app = VortexEngine.createEngine({
+            newTodo: '',
+            todos: [],
+            nextId: 1
+        });
+
+        // Computed properties (reactive getters)
+        Object.defineProperty(app.state, 'completedCount', {
+            get() {
+                return this.todos.filter(todo => todo.completed).length;
+            }
+        });
+
+        Object.defineProperty(app.state, 'remainingCount', {
+            get() {
+                return this.todos.filter(todo => !todo.completed).length;
+            }
+        });
+
+        // Functions for todo operations
+        function addTodo() {
+            const text = app.state.newTodo.trim();
+            if (text) {
+                app.state.todos.push({
+                    id: app.state.nextId++,
+                    text: text,
+                    completed: false
+                });
+                app.state.newTodo = '';
+            }
+        }
+
+        function toggleTodo(id) {
+            const todo = app.state.todos.find(t => t.id === id);
+            if (todo) {
+                todo.completed = !todo.completed;
+            }
+        }
+
+        function deleteTodo(id) {
+            const index = app.state.todos.findIndex(t => t.id === id);
+            if (index !== -1) {
+                app.state.todos.splice(index, 1);
+            }
+        }
+
+        function clearCompleted() {
+            app.state.todos = app.state.todos.filter(todo => !todo.completed);
+        }
+
+        function handleKeydown(event) {
+            if (event.key === 'Enter') {
+                addTodo();
+            }
+        }
+
+        // Mount the application
+        app.mount();
+    </script>
+</body>
+</html>

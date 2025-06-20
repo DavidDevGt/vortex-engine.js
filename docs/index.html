@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VortexEngine - Reactive Microframework Documentation</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌪️</text></svg>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'vortex': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="./dist/vortex-engine.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* Estilos adicionales para bloques de código */
+        #content pre {
+            background-color: rgb(30 41 59);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            border: 1px solid rgb(51 65 85);
+        }
+        
+        #content code {
+            font-size: 0.875rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        
+        #content pre code {
+            color: rgb(241 245 249);
+            line-height: 1.625;
+        }
+        
+        /* Asegurar que highlight.js funcione */
+        .hljs {
+            background: transparent !important;
+            color: #c9d1d9 !important;
+        }
+        
+        /* Colores específicos para diferentes tokens */
+        .hljs-keyword { color: #ff7b72 !important; }
+        .hljs-string { color: #a5d6ff !important; }
+        .hljs-comment { color: #8b949e !important; }
+        .hljs-number { color: #79c0ff !important; }
+        .hljs-built_in { color: #ffa657 !important; }
+        .hljs-function { color: #d2a8ff !important; }
+        .hljs-tag { color: #7ee787 !important; }
+        .hljs-attr { color: #79c0ff !important; }
+        .hljs-variable { color: #ffa657 !important; }
+    </style>
+
+    <script>
+        // Configurar marked con highlight.js DESPUÉS de cargar las librerías
+        marked.setOptions({
+            highlight: function (code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    try {
+                        return hljs.highlight(code, { language: lang }).value;
+                    } catch (err) {
+                        console.warn('Highlight.js error:', err);
+                    }
+                }
+                try {
+                    return hljs.highlightAuto(code).value;
+                } catch (err) {
+                    console.warn('Highlight.js auto error:', err);
+                    return code; // Fallback al código sin highlighting
+                }
+            },
+            langPrefix: 'hljs language-',
+            breaks: true,
+            gfm: true
+        });
+
+        const translations = {
+            en: {
+                title: 'VortexEngine - Reactive Microframework Documentation',
+                subtitle: 'Reactive Microframework',
+                documentation: 'Documentation',
+                quickLinks: 'Quick Links',
+                tableOfContents: 'Table of Contents',
+                gettingStarted: 'Getting Started',
+                apiReference: 'API Reference',
+                examples: 'Examples',
+                liveDocumentation: 'Live Documentation',
+                loading: 'Loading...',
+                loadingDocs: 'Loading documentation...',
+                loadingMessage: 'Please wait while we fetch the content',
+                docNotFound: 'Documentation Not Found',
+                docNotFoundMessage: 'Could not load README.md. Make sure the file exists in the same directory.',
+                error: 'Error'
+            },
+            es: {
+                title: 'VortexEngine - Documentación del Microframework Reactivo',
+                subtitle: 'Microframework Reactivo',
+                documentation: 'Documentación',
+                quickLinks: 'Enlaces Rápidos',
+                tableOfContents: 'Tabla de Contenidos',
+                gettingStarted: 'Comenzar',
+                apiReference: 'Referencia API',
+                examples: 'Ejemplos',
+                liveDocumentation: 'Documentación en Vivo',
+                loading: 'Cargando...',
+                loadingDocs: 'Cargando documentación...',
+                loadingMessage: 'Por favor espera mientras obtenemos el contenido',
+                docNotFound: 'Documentación No Encontrada',
+                docNotFoundMessage: 'No se pudo cargar README.md. Asegúrate de que el archivo existe en el mismo directorio.',
+                error: 'Error'
+            },
+            fr: {
+                title: 'VortexEngine - Documentation du Microframework Réactif',
+                subtitle: 'Microframework Réactif',
+                documentation: 'Documentation',
+                quickLinks: 'Liens Rapides',
+                tableOfContents: 'Table des Matières',
+                gettingStarted: 'Commencer',
+                apiReference: 'Référence API',
+                examples: 'Exemples',
+                liveDocumentation: 'Documentation en Direct',
+                loading: 'Chargement...',
+                loadingDocs: 'Chargement de la documentation...',
+                loadingMessage: 'Veuillez patienter pendant que nous récupérons le contenu',
+                docNotFound: 'Documentation Non Trouvée',
+                docNotFoundMessage: 'Impossible de charger README.md. Assurez-vous que le fichier existe dans le même répertoire.',
+                error: 'Erreur'
+            }
+        };
+
+        const docsApp = VortexEngine.createEngine({
+            isLoading: true,
+            error: null,
+            content: '',
+            tocItems: [],
+            activeSection: '',
+            searchQuery: '',
+            theme: 'dark',
+            language: 'en',
+            availableLanguages: ['en', 'es', 'fr']
+        });
+
+        function t(key) {
+            return translations[docsApp.state.language][key] || key;
+        }
+
+        // Make t function available globally for VortexEngine
+        window.t = t;
+
+        function changeLanguage(lang) {
+            docsApp.setState({ language: lang });
+            document.documentElement.lang = lang;
+            document.title = t('title');
+            loadDocumentation();
+        }
+
+        async function loadDocumentation() {
+            try {
+                docsApp.setState({ isLoading: true, error: null });
+
+                const lang = docsApp.state.language;
+                const readmeFile = lang === 'en' ? './README.md' : `./README.${lang}.md`;
+
+                const response = await fetch(readmeFile);
+                if (!response.ok) {
+                    throw new Error(`README not found for language: ${lang}`);
+                }
+
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+
+                docsApp.setState({
+                    content: html,
+                    isLoading: false
+                });
+
+                // Aplicar highlighting después de renderizar
+                setTimeout(() => {
+                    generateTableOfContents();
+                    setupSmoothScrolling();
+                    // Re-aplicar highlighting a todos los bloques de código
+                    document.querySelectorAll('#content pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                }, 100);
+
+            } catch (error) {
+                docsApp.setState({
+                    error: error.message,
+                    isLoading: false
+                });
+            }
+        }
+
+        function generateTableOfContents() {
+            const headings = document.querySelectorAll('#content h2, #content h3');
+            const tocList = document.getElementById('toc-list');
+            const tocNavigation = document.getElementById('toc-navigation');
+
+            tocList.innerHTML = '';
+
+            if (headings.length === 0) {
+                tocNavigation.style.display = 'none';
+                return;
+            }
+            tocNavigation.style.display = 'block';
+
+            const tocItems = Array.from(headings).map(heading => {
+                if (!heading.id) {
+                    heading.id = heading.textContent.toLowerCase()
+                        .replace(/[^\w\s]/g, '')
+                        .replace(/\s+/g, '-');
+                }
+
+                return {
+                    id: heading.id,
+                    text: heading.textContent,
+                    level: heading.tagName.toLowerCase(),
+                    isActive: false
+                };
+            });
+
+            tocItems.forEach(item => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+
+                a.href = '#' + item.id;
+                a.textContent = item.text;
+                a.className = `block px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200 border-l-2 border-transparent hover:border-vortex-400 ${item.level === 'h3' ? 'pl-6 text-xs text-slate-400' : ''}`;
+                a.onclick = function (e) {
+                    e.preventDefault();
+                    scrollToSection(item.id);
+                };
+
+                li.appendChild(a);
+                tocList.appendChild(li);
+            });
+            docsApp.setState({ tocItems });
+        }
+
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                        updateActiveSection(this.getAttribute('href').substring(1));
+                    }
+                });
+            });
+        }
+
+        function updateActiveSection(sectionId) {
+            docsApp.setState({ activeSection: sectionId });
+
+            const updatedTocItems = docsApp.state.tocItems.map(item => ({
+                ...item,
+                isActive: item.id === sectionId
+            }));
+
+            docsApp.setState({ tocItems: updatedTocItems });
+
+            const tocLinks = document.querySelectorAll('#toc-list a');
+            tocLinks.forEach(link => {
+                link.classList.remove('bg-vortex-500/20', 'border-vortex-400', 'text-white');
+                link.classList.add('text-slate-300', 'border-transparent');
+
+                if (link.getAttribute('href') === '#' + sectionId) {
+                    link.classList.remove('text-slate-300', 'border-transparent');
+                    link.classList.add('bg-vortex-500/20', 'border-vortex-400', 'text-white');
+                }
+            });
+        }
+
+        function scrollToSection(sectionId) {
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+                updateActiveSection(sectionId);
+            }
+        }
+
+        function updateContent() {
+            if (docsApp.state.content && !docsApp.state.isLoading && !docsApp.state.error) {
+                const contentEl = document.getElementById('content');
+                if (contentEl && contentEl.innerHTML !== docsApp.state.content) {
+                    contentEl.innerHTML = docsApp.state.content;
+
+                    setTimeout(() => {
+                        setupSmoothScrolling();
+                        generateTableOfContents();
+                        // Re-aplicar highlighting después de actualizar contenido
+                        document.querySelectorAll('#content pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }, 50);
+                }
+            }
+        }
+
+        function watchContentChanges() {
+            let lastContent = '';
+            const observer = () => {
+                if (docsApp.state.content !== lastContent) {
+                    lastContent = docsApp.state.content;
+                    updateContent();
+                }
+                requestAnimationFrame(observer);
+            };
+            observer();
+        }
+
+        function toggleTheme() {
+            const newTheme = docsApp.state.theme === 'dark' ? 'light' : 'dark';
+            docsApp.setState({ theme: newTheme });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Highlight.js loaded:', typeof hljs !== 'undefined');
+            console.log('Marked loaded:', typeof marked !== 'undefined');
+            console.log('VortexEngine loaded:', typeof VortexEngine !== 'undefined');
+            if (typeof hljs !== 'undefined') {
+                console.log('Available languages:', hljs.listLanguages());
+            }
+            
+            docsApp.mount();
+            loadDocumentation();
+            watchContentChanges();
+        });
+    </script>
+
+</head>
+
+<body class="bg-slate-900 text-slate-100 antialiased"
+    style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;" vx-zone>
+    <div class="flex min-h-screen">
+        <aside
+            class="w-80 bg-slate-800/50 backdrop-blur border-r border-slate-700/60 fixed h-full overflow-y-auto z-50">
+            <div class="p-6 border-b border-slate-700/60">
+                <a href="#"
+                    class="group flex items-center gap-3 text-xl font-bold text-white hover:text-vortex-400 transition-all duration-300">
+                    <div class="text-2xl group-hover:rotate-12 transition-transform duration-300">🌪️</div>
+                    <span
+                        class="bg-gradient-to-r from-vortex-400 to-vortex-600 bg-clip-text text-transparent">VortexEngine</span>
+                    <span
+                        class="bg-gradient-to-r from-vortex-500 to-vortex-600 text-white px-2.5 py-1 rounded-full text-xs font-semibold shadow-lg">v1.0</span>
+                </a>
+                <p class="text-slate-400 text-sm mt-2 font-medium" vx-bind="t('subtitle')">Reactive Microframework</p>
+
+                <div class="mt-4 flex gap-1">
+                    <button onclick="changeLanguage('en')"
+                        class="px-2 py-1 text-xs rounded border border-slate-600 hover:bg-slate-700 transition-colors"
+                        vx-show="language !== 'en'">EN</button>
+                    <button onclick="changeLanguage('en')"
+                        class="px-2 py-1 text-xs rounded border bg-vortex-600 border-vortex-500 text-white"
+                        vx-show="language === 'en'">EN</button>
+                    <button onclick="changeLanguage('es')"
+                        class="px-2 py-1 text-xs rounded border border-slate-600 hover:bg-slate-700 transition-colors text-slate-400"
+                        vx-show="language !== 'es'">ES</button>
+                    <button onclick="changeLanguage('es')"
+                        class="px-2 py-1 text-xs rounded border bg-vortex-600 border-vortex-500 text-white"
+                        vx-show="language === 'es'">ES</button>
+                    <button onclick="changeLanguage('fr')"
+                        class="px-2 py-1 text-xs rounded border border-slate-600 hover:bg-slate-700 transition-colors text-slate-400"
+                        vx-show="language !== 'fr'">FR</button>
+                    <button onclick="changeLanguage('fr')"
+                        class="px-2 py-1 text-xs rounded border bg-vortex-600 border-vortex-500 text-white"
+                        vx-show="language === 'fr'">FR</button>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider"
+                            vx-bind="t('quickLinks')">Quick Links</span>
+                    </div>
+                    <div class="space-y-1">
+                        <a href="#getting-started"
+                            class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200">
+                            <span>🚀</span> <span vx-bind="t('gettingStarted')">Getting Started</span>
+                        </a>
+                        <a href="#api-reference"
+                            class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200">
+                            <span>📚</span> <span vx-bind="t('apiReference')">API Reference</span>
+                        </a>
+                        <a href="#examples"
+                            class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200">
+                            <span>💡</span> <span vx-bind="t('examples')">Examples</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="px-4 pb-4 hidden" id="toc-navigation">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="w-2 h-2 bg-vortex-400 rounded-full"></div>
+                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider"
+                        vx-bind="t('tableOfContents')">Table of Contents</h3>
+                </div>
+                <ul class="space-y-0.5" id="toc-list">
+                    <!-- TOC items will be generated here -->
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="flex-1 ml-80">
+            <header class="bg-slate-800/30 backdrop-blur border-b border-slate-700/60 px-8 py-4 sticky top-0 z-40">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-semibold text-white" vx-bind="t('documentation')">Documentation</h1>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 text-sm text-slate-400">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span vx-show="!isLoading" vx-bind="t('liveDocumentation')">Live Documentation</span>
+                            <span vx-show="isLoading" vx-bind="t('loading')">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Loading State -->
+                    <div vx-show="isLoading"
+                        class="flex flex-col items-center justify-center min-h-[50vh] text-slate-400">
+                        <div class="animate-spin text-4xl mb-4">🌪️</div>
+                        <p class="text-lg font-medium" vx-bind="t('loadingDocs')">Loading documentation...</p>
+                        <p class="text-sm mt-2" vx-bind="t('loadingMessage')">Please wait while we fetch the content</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div vx-show="error" class="bg-red-900/50 border border-red-700 rounded-lg p-8 text-center">
+                        <h2 class="text-red-400 text-xl font-bold mb-4" vx-bind="t('docNotFound')">Documentation Not
+                            Found</h2>
+                        <p class="text-slate-300 mb-2" vx-bind="t('docNotFoundMessage')">Could not load README.md. Make
+                            sure the file exists in the same directory.</p>
+                        <p class="text-slate-400" vx-bind="t('error') + ': ' + error"></p>
+                    </div>
+
+                    <!-- Content -->
+                    <div vx-show="!isLoading && !error" id="content" class="prose prose-invert prose-slate max-w-none">
+                        <!-- Content will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <link rel="stylesheet" href="../assets/css/main.css">
+</body>
+
+</html>

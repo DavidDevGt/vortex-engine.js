@@ -1,0 +1,52 @@
+{
+  "name": "vortex-engine",
+  "version": "1.0.0",
+  "description": "VortexEngine - A lightweight, reactive microframework for building dynamic web applications",
+  "main": "dist/vortex-engine.js",
+  "browser": "dist/vortex-engine.min.js",
+  "module": "lib/vortex-engine.js",
+  "files": [
+    "dist/",
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "npm run build:dist && npm run build:min && npm run build:docs",
+    "build:dist": "mkdir -p dist && cp lib/vortex-engine.js dist/vortex-engine.js",
+    "build:min": "terser lib/vortex-engine.js -o dist/vortex-engine.min.js --compress --mangle",
+    "build:docs": "mkdir -p docs/dist && cp -r dist/* docs/dist/ && cp README*.md docs/",
+    "dev": "npm run build && npm run docs:dev",
+    "docs:dev": "cd docs && python3 -m http.server 3000",
+    "docs:build": "npm run build",
+    "test": "echo 'Tests to be implemented'",
+    "clean": "rm -rf dist/*.js docs/dist docs/README*.md",
+    "watch": "npm run build && npm run docs:dev"
+  },
+  "keywords": [
+    "javascript",
+    "framework",
+    "reactive",
+    "microframework",
+    "dom",
+    "ui",
+    "lightweight",
+    "vanilla"
+  ],
+  "author": "David GT",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DavidDevGt/vortex.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DavidDevGt/vortex.js/issues"
+  },
+  "homepage": "https://github.com/DavidDevGt/vortex.js#readme",
+  "devDependencies": {
+    "terser": "^5.43.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
