@@ -29,7 +29,7 @@ VortexEngine is a modern, lightweight reactive framework that brings the power o
 - **Declarative Templates**: HTML-first approach with intuitive directives
 - **Secure Expression Parsing**: No `eval()` or `with()` statements for enhanced security
 - **Zero Dependencies**: Pure vanilla JavaScript implementation
-- **Minimal Bundle Size**: Less than 15KB minified
+- **Minimal Bundle Size**: Only 13.1KB minified
 - **Memory Efficient**: Smart caching and cleanup mechanisms
 - **Modern Browser Support**: ES6+ features with Proxy API
 

@@ -21,11 +21,11 @@
 
 ## Introduction
 
-**VortexEngine** est un microframework réactif conçu pour créer des applications web dynamiques et interactives avec une syntaxe simple et élégante. Avec seulement **~2KB** en version compressée, VortexEngine fournit toutes les fonctionnalités essentielles dont vous avez besoin pour créer des interfaces utilisateur modernes sans la surcharge de frameworks plus lourds.
+**VortexEngine** est un microframework réactif conçu pour créer des applications web dynamiques et interactives avec une syntaxe simple et élégante. Avec seulement **13.1KB** en version minifiée, VortexEngine fournit toutes les fonctionnalités essentielles dont vous avez besoin pour créer des interfaces utilisateur modernes sans la surcharge de frameworks plus lourds.
 
 ### Pourquoi VortexEngine ?
 
-- 🚀 **Ultra-léger** : Seulement ~2KB compressé
+- 🚀 **Ultra-léger** : Seulement 13.1KB minifié
 - ⚡ **Réactif** : Mises à jour automatiques du DOM lors des changements d'état
 - 📱 **Moderne** : Compatible ES6+ et navigateurs modernes
 - 🎯 **Simple** : Syntaxe intuitive et facile à apprendre

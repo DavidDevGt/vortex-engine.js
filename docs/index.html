@@ -158,35 +158,26 @@
                 docNotFoundMessage: 'Impossible de charger README.md. Assurez-vous que le fichier existe dans le même répertoire.',
                 error: 'Erreur'
             }
-        };
-
-        const docsApp = VortexEngine.createEngine({
-            isLoading: true,
-            error: null,
-            content: '',
-            tocItems: [],
-            activeSection: '',
-            searchQuery: '',
-            theme: 'dark',
-            language: 'en',
-            availableLanguages: ['en', 'es', 'fr']
-        });
+        };        // Declarar docsApp como variable que se inicializará después
+        let docsApp;
 
         function t(key) {
-            return translations[docsApp.state.language][key] || key;
+            return translations[docsApp?.state?.language || 'en'][key] || key;
         }
 
         // Make t function available globally for VortexEngine
         window.t = t;
 
         function changeLanguage(lang) {
-            docsApp.setState({ language: lang });
-            document.documentElement.lang = lang;
-            document.title = t('title');
-            loadDocumentation();
-        }
-
-        async function loadDocumentation() {
+            if (docsApp) {
+                docsApp.setState({ language: lang });
+                document.documentElement.lang = lang;
+                document.title = t('title');
+                loadDocumentation();
+            }
+        }        async function loadDocumentation() {
+            if (!docsApp) return;
+            
             try {
                 docsApp.setState({ isLoading: true, error: null });
 
@@ -266,8 +257,7 @@
 
                 li.appendChild(a);
                 tocList.appendChild(li);
-            });
-            docsApp.setState({ tocItems });
+            });            docsApp.setState({ tocItems });
         }
 
         function setupSmoothScrolling() {
@@ -281,9 +271,9 @@
                     }
                 });
             });
-        }
-
-        function updateActiveSection(sectionId) {
+        }        function updateActiveSection(sectionId) {
+            if (!docsApp) return;
+            
             docsApp.setState({ activeSection: sectionId });
 
             const updatedTocItems = docsApp.state.tocItems.map(item => ({
@@ -311,9 +301,9 @@
                 target.scrollIntoView({ behavior: 'smooth' });
                 updateActiveSection(sectionId);
             }
-        }
-
-        function updateContent() {
+        }        function updateContent() {
+            if (!docsApp) return;
+            
             if (docsApp.state.content && !docsApp.state.isLoading && !docsApp.state.error) {
                 const contentEl = document.getElementById('content');
                 if (contentEl && contentEl.innerHTML !== docsApp.state.content) {
@@ -329,12 +319,10 @@
                     }, 50);
                 }
             }
-        }
-
-        function watchContentChanges() {
+        }        function watchContentChanges() {
             let lastContent = '';
             const observer = () => {
-                if (docsApp.state.content !== lastContent) {
+                if (docsApp && docsApp.state.content !== lastContent) {
                     lastContent = docsApp.state.content;
                     updateContent();
                 }
@@ -344,14 +332,33 @@
         }
 
         function toggleTheme() {
+            if (!docsApp) return;
+            
             const newTheme = docsApp.state.theme === 'dark' ? 'light' : 'dark';
             docsApp.setState({ theme: newTheme });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
+        }document.addEventListener('DOMContentLoaded', () => {
             console.log('Highlight.js loaded:', typeof hljs !== 'undefined');
             console.log('Marked loaded:', typeof marked !== 'undefined');
             console.log('VortexEngine loaded:', typeof VortexEngine !== 'undefined');
+            
+            if (typeof VortexEngine === 'undefined') {
+                console.error('VortexEngine no se ha cargado correctamente');
+                return;
+            }
+
+            // Inicializar docsApp después de que VortexEngine esté disponible
+            docsApp = VortexEngine.createEngine({
+                isLoading: true,
+                error: null,
+                content: '',
+                tocItems: [],
+                activeSection: '',
+                searchQuery: '',
+                theme: 'dark',
+                language: 'en',
+                availableLanguages: ['en', 'es', 'fr']
+            });
+            
             if (typeof hljs !== 'undefined') {
                 console.log('Available languages:', hljs.listLanguages());
             }
@@ -478,9 +485,7 @@
                 </div>
             </div>
         </main>
-    </div>
-
-    <link rel="stylesheet" href="../assets/css/main.css">
+    </div>    <link rel="stylesheet" href="./assets/css/main.css">
 </body>
 
 </html>

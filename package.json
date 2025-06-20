@@ -13,15 +13,27 @@
   ],
   "scripts": {
     "build": "npm run build:dist && npm run build:min && npm run build:docs",
-    "build:dist": "mkdir -p dist && cp lib/vortex-engine.js dist/vortex-engine.js",
+    "build:dist": "npm run mkdir:dist && npm run copy:dist",
     "build:min": "terser lib/vortex-engine.js -o dist/vortex-engine.min.js --compress --mangle",
-    "build:docs": "mkdir -p docs/dist && cp -r dist/* docs/dist/ && cp README*.md docs/",
+    "build:docs": "npm run mkdir:docs && npm run copy:docs:dist && npm run copy:docs:readme",
     "dev": "npm run build && npm run docs:dev",
-    "docs:dev": "cd docs && python3 -m http.server 3000",
+    "docs:dev": "npm run docs:serve",
     "docs:build": "npm run build",
-    "test": "echo 'Tests to be implemented'",
-    "clean": "rm -rf dist/*.js docs/dist docs/README*.md",
-    "watch": "npm run build && npm run docs:dev"
+    "test": "echo \"Tests to be implemented\"",
+    "clean": "npm run clean:dist && npm run clean:docs",
+    "watch": "npm run build && npm run docs:dev",
+    "dev:watch": "concurrently \"npm run watch:build\" \"npm run docs:serve:quiet\"",
+    "watch:build": "nodemon --watch lib --ext js --exec \"npm run build\"",
+    "mkdir:dist": "mkdirp dist",
+    "mkdir:docs": "mkdirp docs/dist",
+    "copy:dist": "copyfiles lib/vortex-engine.js dist --flat",
+    "copy:docs:dist": "copyfiles dist/*.js docs/dist --flat",
+    "copy:docs:readme": "copyfiles README*.md docs --flat",
+    "clean:dist": "rimraf dist",
+    "clean:docs": "rimraf docs/dist docs/README*.md",
+    "docs:serve": "live-server docs --port=3000 --host=localhost --open=/index.html --wait=200 --ignore=node_modules",
+    "docs:serve:quiet": "live-server docs --port=3000 --host=localhost --open=/index.html --wait=200 --ignore=node_modules --quiet",
+    "start": "npm run dev"
   },
   "keywords": [
     "javascript",
@@ -33,7 +45,7 @@
     "lightweight",
     "vanilla"
   ],
-  "author": "David GT",
+  "author": "DavidDevGT",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -44,6 +56,12 @@
   },
   "homepage": "https://github.com/DavidDevGt/vortex.js#readme",
   "devDependencies": {
+    "concurrently": "^9.1.2",
+    "copyfiles": "^2.4.1",
+    "live-server": "^1.2.2",
+    "mkdirp": "^3.0.1",
+    "nodemon": "^3.1.10",
+    "rimraf": "^5.0.10",
     "terser": "^5.43.1"
   },
   "engines": {
