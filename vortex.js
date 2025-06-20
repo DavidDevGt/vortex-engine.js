@@ -14,7 +14,6 @@
     function createReactiveProxy(target, callback, path = '') {
         const cache = new Map();
 
-        // Array de métodos que modifican arrays y deben disparar reactividad
         const arrayMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
 
         return new Proxy(target, {
@@ -26,11 +25,10 @@
                 const value = target[property];
                 const newPath = path ? `${path}.${property}` : property;
 
-                // Interceptar métodos de array para reactividad
                 if (Array.isArray(target) && arrayMethods.includes(property)) {
                     return function (...args) {
                         const result = Array.prototype[property].apply(target, args);
-                        callback(path); // Notificar cambio en el array completo
+                        callback(path);
                         return result;
                     };
                 }
@@ -73,57 +71,102 @@
                 this.allowedComparisons.test(expr) ||
                 this.allowedMath.test(expr) ||
                 /^'.+'$/.test(expr) || // String literal
-                /^\d+(\.\d+)?$/.test(expr) || // Number literal (incluye decimales)
+                /^\d+(\.\d+)?$/.test(expr) || // Number literal
                 this.isStringConcatenation(expr) ||
                 this.isMathExpression(expr) ||
+                this.isComplexExpression(expr) || // Añadir soporte para expresiones complejas
+                this.isTernaryOperator(expr) || // Soporte para operador ternario
+                this.isLogicalExpression(expr) || // Soporte para expresiones lógicas
+                this.isNegationExpression(expr) || // Soporte para negación
                 expr === 'true' || expr === 'false';
         }
 
+        static isComplexExpression(expression) {
+            const complexPattern = /^'[^']*'\s*\+\s*\([^)]+\)$|^[a-zA-Z_$][a-zA-Z0-9_$.]*\s*\+\s*'[^']*'$|^'[^']*'\s*\+\s*[a-zA-Z_$][a-zA-Z0-9_$.]*\s*\+\s*'[^']*'$/;
+            return complexPattern.test(expression.trim());
+        }
+
         static isStringConcatenation(expression) {
-            // Detecta concatenación segura: 'string' + variable + 'string'
             const concatPattern = /^('([^']*)'\s*\+\s*[a-zA-Z_$][a-zA-Z0-9_$.]*(\s*\+\s*'([^']*)')?|[a-zA-Z_$][a-zA-Z0-9_$.]*\s*\+\s*'([^']*)'|\s*'([^']*)'\s*\+\s*[a-zA-Z_$][a-zA-Z0-9_$.]*\s*(\+\s*'([^']*)')?)+$/;
             return concatPattern.test(expression);
         }
 
         static isMathExpression(expression) {
-            // Detecta expresiones matemáticas con paréntesis: (variable * number)
             const mathWithParens = /^\(\s*[a-zA-Z_$][a-zA-Z0-9_$.]*\s*[\+\-\*\/]\s*\d+(\.\d+)?\s*\)$|^[a-zA-Z_$][a-zA-Z0-9_$.]*\s*[\+\-\*\/]\s*\d+(\.\d+)?$/;
             return mathWithParens.test(expression);
+        }
+
+        static isTernaryOperator(expression) {
+            const ternaryPattern = /^[a-zA-Z_$][a-zA-Z0-9_$.]*\s*\?\s*'[^']*'\s*:\s*'[^']*'$/;
+            return ternaryPattern.test(expression.trim());
+        }
+
+        static isLogicalExpression(expression) {
+            const expr = expression.trim();
+
+            const logicalPattern = /^(.+?)\s*(&&|\|\|)\s*(.+)$/;
+            const match = expr.match(logicalPattern);
+
+            if (!match) return false;
+
+            const [, left, operator, right] = match;
+
+            return this.isValidSubExpression(left.trim()) && this.isValidSubExpression(right.trim());
+        }
+
+        static isNegationExpression(expression) {
+            const negationPattern = /^!\s*[a-zA-Z_$][a-zA-Z0-9_$.]*$/;
+            return negationPattern.test(expression.trim());
+        }
+
+        static isValidSubExpression(expression) {
+            const expr = expression.trim();
+            return this.isSimplePath(expr) ||
+                this.allowedComparisons.test(expr) ||
+                this.isNegationExpression(expr) ||
+                /^'.+'$/.test(expr) ||
+                /^\d+(\.\d+)?$/.test(expr) ||
+                expr === 'true' || expr === 'false';
         }
 
         static evaluate(expression, context) {
             const expr = expression.trim();
 
-            // Expresiones simples de path (ej: "user.name")
             if (this.isSimplePath(expr)) {
                 return this.getNestedValue(context, expr);
             }
 
-            // String literals
             if (/^'.+'$/.test(expr)) {
                 return expr.slice(1, -1);
             }
 
-            // Number literals (incluye decimales)
             if (/^\d+(\.\d+)?$/.test(expr)) {
                 return parseFloat(expr);
             }
 
-            // Boolean literals
             if (expr === 'true') return true;
             if (expr === 'false') return false;
 
-            // Concatenación de strings mejorada
-            if (this.isStringConcatenation(expr)) {
+            if (this.isStringConcatenation(expr) || this.isComplexExpression(expr)) {
                 return this.evaluateStringConcatenation(expr, context);
             }
 
-            // Expresiones matemáticas con paréntesis
             if (this.isMathExpression(expr)) {
                 return this.evaluateMathExpression(expr, context);
             }
 
-            // Comparaciones simples
+            if (this.isTernaryOperator(expr)) {
+                return this.evaluateTernaryOperator(expr, context);
+            }
+
+            if (this.isLogicalExpression(expr)) {
+                return this.evaluateLogicalExpression(expr, context);
+            }
+
+            if (this.isNegationExpression(expr)) {
+                return this.evaluateNegationExpression(expr, context);
+            }
+
             const compMatch = expr.match(/^(.+?)\s*(===|!==|==|!=|<|>|<=|>=)\s*(.+)$/);
             if (compMatch) {
                 const [, left, operator, right] = compMatch;
@@ -142,7 +185,6 @@
                 }
             }
 
-            // Operaciones matemáticas simples
             const mathMatch = expr.match(/^(.+?)\s*([\+\-\*\/])\s*(\d+(\.\d+)?)$/);
             if (mathMatch) {
                 const [, left, operator, right] = mathMatch;
@@ -162,30 +204,43 @@
         }
 
         static evaluateStringConcatenation(expression, context) {
-            // Maneja concatenación como: 'Hello ' + name + '!'
+            const expr = expression.trim();
+
+            const complexMatch = expr.match(/^'([^']*)'\s*\+\s*\(([^)]+)\)$/);
+            if (complexMatch) {
+                const [, stringPart, mathPart] = complexMatch;
+                const mathResult = this.evaluateMathExpression(`(${mathPart})`, context);
+                return stringPart + mathResult;
+            }
+
             const parts = [];
             let current = '';
             let inString = false;
+            let parenLevel = 0;
             let i = 0;
 
             while (i < expression.length) {
                 const char = expression[i];
 
-                if (char === "'" && (i === 0 || expression[i - 1] !== '\\')) {
+                if (char === '(') {
+                    parenLevel++;
+                    current += char;
+                } else if (char === ')') {
+                    parenLevel--;
+                    current += char;
+                } else if (char === "'" && parenLevel === 0 && (i === 0 || expression[i - 1] !== '\\')) {
                     if (inString) {
-                        // Fin de string
                         parts.push("'" + current + "'");
                         current = '';
                         inString = false;
                     } else {
-                        // Inicio de string
                         if (current.trim()) {
                             parts.push(current.trim());
                             current = '';
                         }
                         inString = true;
                     }
-                } else if (char === '+' && !inString) {
+                } else if (char === '+' && !inString && parenLevel === 0) {
                     if (current.trim()) {
                         parts.push(current.trim());
                         current = '';
@@ -204,6 +259,8 @@
                 const p = part.trim();
                 if (/^'.*'$/.test(p)) {
                     return p.slice(1, -1); // Remove quotes
+                } else if (/^\(.+\)$/.test(p)) {
+                    return this.evaluateMathExpression(p, context);
                 }
                 return String(this.getNestedValue(context, p) || '');
             }).join('');
@@ -228,6 +285,90 @@
             }
 
             return 0;
+        }
+
+        static evaluateTernaryOperator(expression, context) {
+            const expr = expression.trim();
+
+            const ternaryMatch = expr.match(/^([a-zA-Z_$][a-zA-Z0-9_$.]*)\s*\?\s*'([^']*)'\s*:\s*'([^']*)'$/);
+            if (ternaryMatch) {
+                const [, condition, trueValue, falseValue] = ternaryMatch;
+                const conditionValue = this.getNestedValue(context, condition);
+                return conditionValue ? trueValue : falseValue;
+            }
+
+            return '';
+        }
+
+        static evaluateLogicalExpression(expression, context) {
+            const expr = expression.trim();
+
+            const logicalMatch = expr.match(/^(.+?)\s*(&&|\|\|)\s*(.+)$/);
+            if (!logicalMatch) return false;
+
+            const [, left, operator, right] = logicalMatch;
+
+            const leftValue = this.evaluateSubExpression(left.trim(), context);
+
+            if (operator === '&&') {
+                return leftValue && this.evaluateSubExpression(right.trim(), context);
+            } else if (operator === '||') {
+                return leftValue || this.evaluateSubExpression(right.trim(), context);
+            }
+
+            return false;
+        }
+
+        static evaluateNegationExpression(expression, context) {
+            const expr = expression.trim();
+
+            const negationMatch = expr.match(/^!\s*([a-zA-Z_$][a-zA-Z0-9_$.]*)$/);
+            if (negationMatch) {
+                const [, variable] = negationMatch;
+                const value = this.getNestedValue(context, variable);
+                return !value;
+            }
+
+            return false;
+        }
+
+        static evaluateSubExpression(expression, context) {
+            const expr = expression.trim();
+
+            if (this.isSimplePath(expr)) {
+                return this.getNestedValue(context, expr);
+            }
+
+            if (this.allowedComparisons.test(expr)) {
+                const compMatch = expr.match(/^(.+?)\s*(===|!==|==|!=|<|>|<=|>=)\s*(.+)$/);
+                if (compMatch) {
+                    const [, left, operator, right] = compMatch;
+                    const leftVal = this.getNestedValue(context, left.trim());
+                    const rightVal = this.parseValue(right.trim(), context);
+
+                    switch (operator) {
+                        case '===': return leftVal === rightVal;
+                        case '!==': return leftVal !== rightVal;
+                        case '==': return leftVal == rightVal;
+                        case '!=': return leftVal != rightVal;
+                        case '<': return leftVal < rightVal;
+                        case '>': return leftVal > rightVal;
+                        case '<=': return leftVal <= rightVal;
+                        case '>=': return leftVal >= rightVal;
+                    }
+                }
+            }
+
+            if (this.isNegationExpression(expr)) {
+                return this.evaluateNegationExpression(expr, context);
+            }
+
+            if (/^'.+'$/.test(expr)) return expr.slice(1, -1);
+            if (/^\d+(\.\d+)?$/.test(expr)) return parseFloat(expr);
+            if (expr === 'true') return true;
+            if (expr === 'false') return false;
+
+            return false;
         }
 
         static getNestedValue(obj, path) {
@@ -344,34 +485,57 @@
             this.register('if', (el, expression) => {
                 const evaluate = this.compileExpression(expression);
                 const parent = el.parentNode;
-                const placeholder = document.createComment("vx-if placeholder");
-                let isInDOM = true; // Track element state
 
-                this.engine.bindings.push({
+                if (!parent) {
+                    console.error('[VortexJS] vx-if: Elemento no tiene parent node');
+                    return;
+                }
+
+                const placeholder = document.createComment(`vx-if: ${expression}`);
+
+                parent.insertBefore(placeholder, el);
+
+                const initialState = this.engine.state;
+                const initialShow = evaluate(initialState);
+
+                const binding = {
                     type: 'if',
                     el,
                     evaluate,
                     parent,
                     placeholder,
-                    isInDOM,
+                    isInDOM: true, // review 
                     update: (state) => {
                         const shouldShow = evaluate(state);
 
-                        if (shouldShow && !this.isInDOM) {
-                            // Show element: replace placeholder with element
-                            if (placeholder.parentNode) {
-                                parent.replaceChild(el, placeholder);
+                        if (shouldShow && !binding.isInDOM) {
+                            if (placeholder.parentNode === parent) {
+                                parent.insertBefore(el, placeholder.nextSibling);
+                                binding.isInDOM = true;
                             }
-                            this.isInDOM = true;
-                        } else if (!shouldShow && this.isInDOM) {
-                            // Hide element: replace element with placeholder
-                            if (el.parentNode) {
-                                parent.replaceChild(placeholder, el);
+                        } else if (!shouldShow && binding.isInDOM) {
+                            if (el.parentNode === parent) {
+                                parent.removeChild(el);
+                                binding.isInDOM = false;
                             }
-                            this.isInDOM = false;
+                        }
+                    },
+                    cleanup: () => {
+                        if (placeholder.parentNode) {
+                            placeholder.remove();
+                        }
+                        if (el.parentNode) {
+                            el.remove();
                         }
                     }
-                });
+                };
+
+                if (!initialShow) {
+                    parent.removeChild(el);
+                    binding.isInDOM = false;
+                }
+
+                this.engine.bindings.push(binding);
             });
 
             // vx-for: Itera sobre un array para generar elementos dinámicamente.
@@ -400,7 +564,6 @@
                         const list = state[listName];
                         if (!Array.isArray(list)) return;
 
-                        // Clear previous elements efficiently
                         previousElements.forEach(el => {
                             if (el.parentNode) {
                                 el.remove();
@@ -417,7 +580,6 @@
                             fragment.appendChild(element);
                         });
 
-                        // Insert new elements after placeholder
                         parent.insertBefore(fragment, placeholder.nextSibling);
                         previousElements = newElements;
                     }
@@ -452,16 +614,12 @@
 
             // vx-on: Asocia manejadores de eventos al elemento.
             this.register('on', (el, expression) => {
-                // Permite múltiples eventos separados por ";"
                 const handlers = expression.split(";").map(s => s.trim()).filter(Boolean);
                 handlers.forEach(handler => {
                     const [eventName, code] = handler.split(":").map(s => s.trim());
                     if (eventName && code) {
-                        // Parser más seguro para eventos
                         const createEventHandler = (code) => {
-                            // Solo permitir calls de funciones simples y assignments básicos
                             if (/^[a-zA-Z_$][a-zA-Z0-9_$]*\(\)$/.test(code)) {
-                                // Function call like "toggleShow()"
                                 const funcName = code.slice(0, -2);
                                 return (state, event) => {
                                     if (typeof state[funcName] === 'function') {
@@ -469,14 +627,12 @@
                                     }
                                 };
                             } else if (/^[a-zA-Z_$][a-zA-Z0-9_$]*\s*[\+\-][\+\-]$/.test(code)) {
-                                // Increment/decrement like "counter++"
                                 const [prop, op] = [code.slice(0, -2).trim(), code.slice(-2)];
                                 return (state) => {
                                     if (op === '++') state[prop]++;
                                     else if (op === '--') state[prop]--;
                                 };
                             } else if (/^[a-zA-Z_$][a-zA-Z0-9_$]*\s*=\s*.+$/.test(code)) {
-                                // Simple assignment like "value = 'something'"
                                 const [prop, value] = code.split('=').map(s => s.trim());
                                 return (state) => {
                                     state[prop] = SafeExpressionParser.parseValue(value, state);
@@ -506,11 +662,9 @@
         }
 
         processZone(zone) {
-            // Para cada directiva, recorremos los elementos con ese atributo
             Object.keys(DIRECTIVES).forEach(key => {
                 const attr = DIRECTIVES[key];
-                // Evitamos procesar elementos que sean descendientes de un vx-for,
-                // excepto el propio elemento que define el vx-for.
+
                 zone.querySelectorAll(`[${attr}]`).forEach(el => {
                     if (el !== zone && el.closest('[vx-for]') && !el.hasAttribute('vx-for')) {
                         return;
@@ -601,7 +755,6 @@
         }
 
         _shouldUpdateBinding(binding, affectedPaths) {
-            // Optimización: solo actualizar si hay dependencias afectadas
             if (!binding.dependencies) return true;
 
             return affectedPaths.some(path =>
@@ -630,8 +783,27 @@
             zones.forEach(zone => {
                 this.directiveManager.processZone(zone);
             });
-            this._processUpdates(); // Usar método unificado
+
+            this._processUpdates();
             return this;
+        }
+
+        /**
+         * Desmonta el engine y limpia todos los bindings
+         */
+        unmount() {
+            this.bindings.forEach(binding => {
+                if (binding.cleanup && typeof binding.cleanup === 'function') {
+                    try {
+                        binding.cleanup();
+                    } catch (error) {
+                        console.warn('[VortexJS] Error durante cleanup:', error);
+                    }
+                }
+            });
+            this.bindings.length = 0;
+            this.pendingUpdates.clear();
+            this.updateScheduled = false;
         }
 
         /**
@@ -640,7 +812,6 @@
          */
         setState(newState) {
             Object.assign(this.state, newState);
-            // No necesitamos programar render manual ya que el proxy lo hace automáticamente
         }
     }
 
